@@ -5,22 +5,17 @@ if ($_SESSION['perfil'] != "supervisor") {
     exit;
 }
 
-
-$conn = new mysqli("localhost", "root", "", "escuela_app");
-if ($conn->connect_error) {
-    die("Error de conexión: " . $conn->connect_error);
-}
-
+include "../conexion.php";
 
 $totalAlumnos = $conn->query("SELECT COUNT(*) AS total FROM usuarios WHERE perfil='alumno'")->fetch_assoc()['total'];
 $totalCursos  = $conn->query("SELECT COUNT(*) AS total FROM cursos")->fetch_assoc()['total'];
+
 $totalReportes = 0;
 if ($conn->query("SHOW TABLES LIKE 'reportes'")->num_rows > 0) {
     $totalReportes = $conn->query("SELECT COUNT(*) AS total FROM reportes")->fetch_assoc()['total'];
 }
 
-
-$alumnos = $conn->query("SELECT id, nombre, email, estado FROM usuarios WHERE perfil='alumno'");
+$alumnos = $conn->query("SELECT id, nombre, email, Telefono, estado FROM usuarios WHERE perfil='alumno'");
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -38,6 +33,11 @@ $alumnos = $conn->query("SELECT id, nombre, email, estado FROM usuarios WHERE pe
         .btn-del { background:#e74c3c; color:#fff; }
         .btn-act { background:#2ecc71; color:#fff; }
         .btn-inact { background:#f39c12; color:#fff; }
+        .msg { margin-top:10px; font-weight:bold; text-align:center; }
+        .form { background:#fff; padding:20px; border-radius:10px; box-shadow:0 4px 10px rgba(0,0,0,0.1); max-width:400px; }
+        .form input { width:100%; padding:10px; margin-top:10px; border:1px solid #ccc; border-radius:6px; }
+        .form button { margin-top:15px; width:100%; padding:10px; border:none; border-radius:6px; background:#2ecc71; color:#fff; font-size:16px; cursor:pointer; }
+        .form button:hover { background:#27ae60; }
     </style>
 </head>
 <body>
@@ -72,14 +72,16 @@ $alumnos = $conn->query("SELECT id, nombre, email, estado FROM usuarios WHERE pe
             <div class="card">📊 <h2><?php echo $totalReportes; ?></h2><p>Reportes</p></div>
         </section>
 
-        
+       
         <section id="crear" class="hidden">
             <h2>👨‍🎓 Crear Alumno</h2>
-            <form action="crear_estudiante.php" method="POST">
-                <input type="text" name="nombre" placeholder="Nombre completo" required><br><br>
-                <input type="email" name="email" placeholder="Correo" required><br><br>
-                <input type="password" name="password" placeholder="Contraseña" required><br><br>
-                <button type="submit" class="btn btn-act">Crear Alumno</button>
+            <form id="formCrearAlumno" class="form">
+                <input type="text" name="nombre" placeholder="Nombre completo" required>
+                <input type="email" name="email" placeholder="Correo" required>
+                <input type="password" name="password" placeholder="Contraseña" required>
+                <input type="text" name="Telefono" placeholder="Teléfono (opcional)">
+                <button type="submit">Guardar Alumno</button>
+                <p id="msg" class="msg"></p>
             </form>
         </section>
 
@@ -95,23 +97,22 @@ $alumnos = $conn->query("SELECT id, nombre, email, estado FROM usuarios WHERE pe
             <table class="table">
                 <thead>
                     <tr>
-                        <th>ID</th><th>Nombre</th><th>Email</th><th>Estado</th><th>Acciones</th>
+                        <th>ID</th><th>Nombre</th><th>Email</th><th>Teléfono</th><th>Estado</th><th>Acciones</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="tablaAlumnos">
                     <?php while($row = $alumnos->fetch_assoc()): ?>
                         <tr>
                             <td><?php echo $row['id']; ?></td>
                             <td><?php echo $row['nombre']; ?></td>
                             <td><?php echo $row['email']; ?></td>
+                            <td><?php echo $row['Telefono']; ?></td>
                             <td><?php echo ucfirst($row['estado']); ?></td>
                             <td>
-                                <button class="btn btn-edit">✏️ Editar</button>
-                                <button class="btn btn-del">🗑️ Eliminar</button>
                                 <?php if ($row['estado'] == "activo"): ?>
-                                    <button class="btn btn-inact">🔒 Inactivar</button>
+                                    <button class="btn btn-inact" onclick="cambiarEstado(<?php echo $row['id']; ?>)">🔒 Inactivar</button>
                                 <?php else: ?>
-                                    <button class="btn btn-act">🔓 Activar</button>
+                                    <button class="btn btn-act" onclick="cambiarEstado(<?php echo $row['id']; ?>)">🔓 Activar</button>
                                 <?php endif; ?>
                             </td>
                         </tr>
@@ -126,6 +127,38 @@ $alumnos = $conn->query("SELECT id, nombre, email, estado FROM usuarios WHERE pe
 function mostrar(id) {
     document.querySelectorAll('main section').forEach(sec => sec.classList.add('hidden'));
     document.getElementById(id).classList.remove('hidden');
+}
+
+
+document.getElementById("formCrearAlumno").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const msg = document.getElementById("msg");
+
+    try {
+        const res = await fetch("crear_estudiante.php", { method: "POST", body: formData });
+        const data = await res.text();
+
+        msg.textContent = data.includes("exito") ? "✅ Alumno creado correctamente" : "❌ Error al crear alumno";
+        msg.style.color = data.includes("exito") ? "green" : "red";
+        e.target.reset();
+    } catch (error) {
+        msg.textContent = "⚠️ Error de conexión";
+        msg.style.color = "red";
+    }
+});
+
+
+async function cambiarEstado(id) {
+    const res = await fetch(`toggle_estado_supervisor.php?id=${id}`);
+    const data = await res.text();
+
+    if (data.includes("exito")) {
+        const fila = document.querySelector(`#tablaAlumnos tr td:first-child:contains(${id})`);
+        location.reload(); 
+    } else {
+        alert("Error al cambiar el estado del alumno");
+    }
 }
 </script>
 </body>
