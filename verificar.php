@@ -24,6 +24,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if (password_verify($password, $usuario['password'])) {
             $_SESSION['usuario'] = $usuario['nombre'];
             $_SESSION['perfil'] = $usuario['perfil'];
+            $_SESSION['email'] = $usuario['email'];
 
             switch ($usuario['perfil']) {
                 case "administrador":
@@ -34,6 +35,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     break;
                 case "profesor":
                     header("Location: profesor/panel.php");
+                    break;
+                case "visitante":
+                    header("Location: usuarios/informacion.php");
+                    break;
+                case "":
+                case null:
+        // Si no tiene perfil definido, lo tratamos como visitante
+                    header("Location: usuarios/informacion.php");
                     break;
                 case "alumno":
                     header("Location: alumno/panel.php");
