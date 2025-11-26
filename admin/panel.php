@@ -7,7 +7,7 @@ if ($_SESSION['perfil'] != "administrador") {
 include "../conexion.php";
 
 $totalUsuarios = $conn->query("SELECT COUNT(*) AS total FROM usuarios")->fetch_assoc()['total'];
-$totalCursos   = $conn->query("SELECT COUNT(*) AS total FROM cursos")->fetch_assoc()['total'];
+$totalMaterias = $conn->query("SELECT COUNT(*) AS total FROM materias")->fetch_assoc()['total'];
 $totalProfes   = $conn->query("SELECT COUNT(*) AS total FROM usuarios WHERE perfil='profesor'")->fetch_assoc()['total'];
 $totalSuper    = $conn->query("SELECT COUNT(*) AS total FROM usuarios WHERE perfil='supervisor'")->fetch_assoc()['total'];
 $totalAlumnos  = $conn->query("SELECT COUNT(*) AS total FROM usuarios WHERE perfil='alumno'")->fetch_assoc()['total'];
@@ -63,6 +63,7 @@ $seccion = $_GET['seccion'] ?? "dashboard";
                 <li><a href="#" onclick="showSection('dashboard')">📊 Dashboard</a></li>
                 <li><a href="#" onclick="showSection('gestion')">👥 Gestión Usuarios</a></li>
                 <li><a href="#" onclick="showSection('crear')">➕ Crear Usuario</a></li>
+                <li><a href="#" onclick="showSection('reportes')">📄 Reportes</a></li>
                 <li><a href="../auth/logout.php" class="logout">🚪 Salir</a></li>
             </ul>
         </nav>
@@ -75,7 +76,7 @@ $seccion = $_GET['seccion'] ?? "dashboard";
             <header><h1>📊 Dashboard Admin</h1></header>
             <section class="stats">
                 <div class="card">👥 <h2><?php echo $totalUsuarios; ?></h2><p>Usuarios</p></div>
-                <div class="card">📚 <h2><?php echo $totalCursos; ?></h2><p>Cursos</p></div>
+                <div class="card">📚 <h2><?php echo $totalMaterias; ?></h2><p>Materias</p></div>
                 <div class="card">🧑‍🏫 <h2><?php echo $totalProfes; ?></h2><p>Profesores</p></div>
                 <div class="card">🧑‍💼 <h2><?php echo $totalSuper; ?></h2><p>Supervisores</p></div>
                 <div class="card">🎓 <h2><?php echo $totalAlumnos; ?></h2><p>Alumnos</p></div>
@@ -151,6 +152,28 @@ $seccion = $_GET['seccion'] ?? "dashboard";
             </div>
         </section>
 
+        <section id="reportes" class="section <?php echo ($seccion=='reportes')?'active':''; ?>">
+    <div class="user-management">
+        <h2>📄 Generar Reportes del Sistema</h2>
+
+        <p>Puedes generar un archivo PDF con toda la información registrada:</p>
+
+        <ul style="line-height: 1.8;">
+            <li>✔ Lista completa de usuarios</li>
+            <li>✔ Totales por perfiles</li>
+            <li>✔ Lista de materias</li>
+            <li>✔ Estado de cada usuario</li>
+            <li>✔ Fecha del reporte</li>
+        </ul>
+
+        <br>
+        <a href="reporte_pdf.php" target="_blank" class="btn btn-edit" style="padding:10px 15px; background:#e67e22;">
+            📥 Descargar Reporte PDF
+        </a>
+    </div>
+</section>
+
+
     </main>
 </div>
 
@@ -166,10 +189,10 @@ function showSection(sectionId) {
 new Chart(document.getElementById('chartUsuarios'), {
     type: 'bar',
     data: {
-        labels: ['Usuarios', 'Cursos'],
+        labels: ['Usuarios', 'Materias'],
         datasets: [{
             label: 'Cantidad',
-            data: [<?php echo $totalUsuarios; ?>, <?php echo $totalCursos; ?>],
+            data: [<?php echo $totalUsuarios; ?>, <?php echo $totalMaterias; ?>],
             backgroundColor: ['#4CAF50', '#2196F3']
         }]
     }

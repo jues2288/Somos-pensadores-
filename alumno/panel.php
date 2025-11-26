@@ -17,10 +17,11 @@ $alumno_id = $alumno['id'];
 $total_materias = $conn->query("SELECT COUNT(*) AS total FROM inscripciones WHERE alumno_id = $alumno_id")->fetch_assoc()['total'];
 
 // Calcular promedio
-$promedio = $conn->query("SELECT AVG(calificacion) AS promedio FROM notas WHERE id_usuario = $alumno_id")->fetch_assoc()['promedio'];
+$promedio = $conn->query("SELECT AVG(nota) AS promedio FROM calificaciones WHERE alumno_id = $alumno_id")->fetch_assoc()['promedio'];
 
 // Materias reprobadas
-$reprobadas = $conn->query("SELECT COUNT(*) AS total FROM notas WHERE id_usuario = $alumno_id AND calificacion < 3")->fetch_assoc()['total'];
+$reprobadas = $conn->query("SELECT COUNT(*) AS total FROM calificaciones WHERE alumno_id = $alumno_id AND nota < 3")->fetch_assoc()['total'];
+
 ?>
 <!DOCTYPE html>
 <html lang="es">

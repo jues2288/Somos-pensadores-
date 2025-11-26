@@ -10,13 +10,28 @@ include "../conexion.php";
 
 $email = $_SESSION['email'];
 
-$sql = "SELECT m.nombre AS materia, m.semestre_id AS semestre, n.calificacion
-        FROM materias m
-        INNER JOIN notas n ON m.id = n.id_materia
-        INNER JOIN usuarios u ON n.id_usuario = u.id
-        WHERE u.email = ?";
+// Obtener ID del alumno
+$sqlUser = "SELECT id FROM usuarios WHERE email = ?";
+$stmtUser = $conn->prepare($sqlUser);
+$stmtUser->bind_param("s", $email);
+$stmtUser->execute();
+$resUser = $stmtUser->get_result();
+$usuario = $resUser->fetch_assoc();
+
+$alumno_id = $usuario['id'];
+
+// Obtener materias inscritas + calificaciones
+$sql = "SELECT 
+            m.nombre AS materia, 
+            m.semestre_id AS semestre, 
+            c.nota AS calificacion
+        FROM inscripciones i
+        INNER JOIN materias m ON i.materia_id = m.id
+        LEFT JOIN calificaciones c 
+            ON c.materia_id = m.id AND c.alumno_id = i.alumno_id
+        WHERE i.alumno_id = ?";
 $stmt = $conn->prepare($sql);
-$stmt->bind_param("s", $email);
+$stmt->bind_param("i", $alumno_id);
 $stmt->execute();
 $resultado = $stmt->get_result();
 ?>

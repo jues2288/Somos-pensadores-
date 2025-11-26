@@ -7,8 +7,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
     $Telefono = $_POST['Telefono'] ?? '';
 
-    $sql = "INSERT INTO usuarios (nombre, email, password, Telefono, perfil, estado)
-            VALUES (?, ?, ?, ?, 'alumno', 'activo')";
+    // Agregamos semestre = 1 al registro
+    $sql = "INSERT INTO usuarios (nombre, email, password, Telefono, perfil, estado, semestre)
+            VALUES (?, ?, ?, ?, 'alumno', 'activo', 1)";
+
     $stmt = $conn->prepare($sql);
     $stmt->bind_param("ssss", $nombre, $email, $password, $Telefono);
 
